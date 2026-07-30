@@ -1,0 +1,12 @@
+sudo su -
+  vi kye.pem(key name)
+  chmode 400 (key name)
+  ssh -i key.pem ec2-user@<ec2 public ip>
+
+  ---------------------------------------
+connect private ec2 though bestion host 
+  connect bastion host ec2 
+sudo su -
+  vi kye.pem(key name)
+  chmode 400 (key name)
+    ssh -i key.pem ec2-user@<ec2 private ip> private ec2 
