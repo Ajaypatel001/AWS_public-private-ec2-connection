@@ -1,24 +1,43 @@
 # ☁️ AWS EC2 Connection Guide
 
-This guide explains how to connect to AWS EC2 instances in different scenarios.
+This guide explains how to connect AWS EC2 instances in different scenarios.
 
 ---
 
-# Scenario 1: Public EC2 Instance (Without Key Pair)
+# Scenario 1: Public EC2 (Without Key Pair)
 
-If you already have access to a public EC2 instance without using a key pair, switch to the root user.
+If the EC2 instance is already accessible, switch to the root user.
 
 ```bash
 sudo su -
 ```
 
-Now you can install packages, configure services, and manage the server as the root user.
-
 ---
 
-# Scenario 2: Public EC2 Instance (Using a Key Pair)
+# Scenario 2: Public EC2 (Using Key Pair)
 
-If your EC2 instance was created with a key pair, connect using SSH.
+Create a key file.
+
+```bash
+vi key.pem
+```
+
+Paste the complete private key inside the file.
+
+Press:
+
+```text
+Esc
+:wq!
+```
+
+Change the file permission.
+
+```bash
+chmod 400 key.pem
+```
+
+Connect to the Public EC2.
 
 ```bash
 ssh -i key.pem ec2-user@<PUBLIC-IP>
@@ -27,10 +46,10 @@ ssh -i key.pem ec2-user@<PUBLIC-IP>
 Example:
 
 ```bash
-ssh -i my-key.pem ec2-user@54.123.45.67
+ssh -i key.pem ec2-user@54.xxx.xxx.xxx
 ```
 
-After connecting, switch to the root user.
+After login:
 
 ```bash
 sudo su -
@@ -38,33 +57,38 @@ sudo su -
 
 ---
 
-# Give Permission to Key File
+# Scenario 3: Connect to Private EC2 Using Bastion Host
 
-If you get a permission error, change the key file permission.
+A Private EC2 cannot be accessed directly from the Internet.
+
+### Step 1: Login to Public EC2 (Bastion Host)
+
+```bash
+vi key.pem
+```
+
+Paste the private key.
+
+Save the file.
+
+```text
+Esc
+:wq!
+```
+
+Give permission.
 
 ```bash
 chmod 400 key.pem
 ```
 
-Then connect again.
+Connect to the Public EC2.
 
 ```bash
 ssh -i key.pem ec2-user@<PUBLIC-IP>
 ```
 
----
-
-# Scenario 3: Connect to a Private EC2 Instance
-
-A private EC2 instance cannot be accessed directly from the Internet.
-
-First connect to the Public EC2 (Bastion Host).
-
-```bash
-ssh -i key.pem ec2-user@<PUBLIC-IP>
-```
-
-Switch to the root user.
+Switch to root.
 
 ```bash
 sudo su -
@@ -72,15 +96,24 @@ sudo su -
 
 ---
 
-# Copy the Key File to the Public EC2 (Optional)
+### Step 2: Create Key Again (If Required)
 
-If the key file is not already on the Bastion Host, copy it from your local machine.
+If the key file is not available after switching servers, create it again.
 
 ```bash
-scp -i key.pem key.pem ec2-user@<PUBLIC-IP>:/home/ec2-user/
+vi key.pem
 ```
 
-On the Public EC2:
+Paste the private key.
+
+Save.
+
+```text
+Esc
+:wq!
+```
+
+Give permission.
 
 ```bash
 chmod 400 key.pem
@@ -88,7 +121,7 @@ chmod 400 key.pem
 
 ---
 
-# Connect from Public EC2 to Private EC2
+### Step 3: Connect to Private EC2
 
 ```bash
 ssh -i key.pem ec2-user@<PRIVATE-IP>
@@ -100,71 +133,144 @@ Example:
 ssh -i key.pem ec2-user@10.0.1.25
 ```
 
-Now you are connected to the Private EC2 instance.
+After login:
+
+```bash
+sudo su -
+```
+
+---
+
+# Scenario 4: Frontend EC2 + Backend EC2
+
+Architecture
+
+```text
+                Internet
+                     │
+                     ▼
+        Frontend EC2 (Public)
+              Bastion Host
+                     │
+                     ▼
+         Backend EC2 (Private)
+```
+
+### Connect to Frontend
+
+```bash
+vi key.pem
+```
+
+Paste the private key.
+
+Save.
+
+```text
+Esc
+:wq!
+```
+
+Permission.
+
+```bash
+chmod 400 key.pem
+```
+
+Login.
+
+```bash
+ssh -i key.pem ec2-user@<FRONTEND_PUBLIC_IP>
+```
+
+Become root.
+
+```bash
+sudo su -
+```
+
+---
+
+### Connect Frontend to Backend
+
+Again create the key if required.
+
+```bash
+vi key.pem
+```
+
+Paste the key.
+
+Save.
+
+```text
+Esc
+:wq!
+```
+
+Permission.
+
+```bash
+chmod 400 key.pem
+```
+
+Connect to Backend.
+
+```bash
+ssh -i key.pem ec2-user@<BACKEND_PRIVATE_IP>
+```
+
+Become root.
+
+```bash
+sudo su -
+```
 
 ---
 
 # Connection Flow
 
 ```text
-Your Laptop
-      │
-      ▼
-Public EC2 (Bastion Host)
-      │
-      ▼
-Private EC2
-```
-
----
-
-# Common SSH Commands
-
-### Connect to Public EC2
-
-```bash
-ssh -i key.pem ec2-user@<PUBLIC-IP>
-```
-
-### Connect to Private EC2
-
-```bash
-ssh -i key.pem ec2-user@<PRIVATE-IP>
-```
-
-### Switch to Root User
-
-```bash
+Laptop
+   │
+   ▼
+vi key.pem
+   │
+Paste Key
+   │
+:wq!
+   │
+chmod 400 key.pem
+   │
+ssh -i key.pem ec2-user@Public-IP
+   │
+sudo su -
+   │
+vi key.pem
+   │
+Paste Key
+   │
+:wq!
+   │
+chmod 400 key.pem
+   │
+ssh -i key.pem ec2-user@Private-IP
+   │
 sudo su -
 ```
 
-### Change Key Permission
-
-```bash
-chmod 400 key.pem
-```
-
-### Copy File to EC2
-
-```bash
-scp -i key.pem file.txt ec2-user@<PUBLIC-IP>:/home/ec2-user/
-```
-
-### Exit from Server
-
-```bash
-exit
-```
-
 ---
 
-# Notes
+# Commands Summary
 
-- Keep your **key.pem** file safe.
-- Never share your private key with anyone.
-- Use `chmod 400 key.pem` before connecting if required.
-- A Private EC2 instance is not directly accessible from the Internet.
-- Always connect to the Public EC2 (Bastion Host) first, then connect to the Private EC2.
+```bash
+vi key.pem
+chmod 400 key.pem
+ssh -i key.pem ec2-user@<PUBLIC-IP>
+ssh -i key.pem ec2-user@<PRIVATE-IP>
+sudo su -
+exit
+```
 
 ---
 
@@ -173,172 +279,3 @@ exit
 **Ajay Patel**
 
 **DevOps | AWS | Docker | Jenkins | Terraform | Git | Linux**
-
-
-
-# Scenario 4: Frontend EC2 + Backend EC2 (Private) using Bastion Host
-
-### Architecture
-
-```text
-                Internet
-                    │
-                    ▼
-        Public EC2 (Frontend / Bastion Host)
-              Public IP: 54.xxx.xxx.xxx
-                    │
-                    │ SSH
-                    ▼
-          Private EC2 (Backend)
-            Private IP: 10.0.1.25
-```
-
----
-
-## Step 1: Connect to the Bastion Host (Public EC2)
-
-```bash
-ssh -i key.pem ec2-user@<PUBLIC-IP>
-```
-
-Example:
-
-```bash
-ssh -i key.pem ec2-user@54.123.45.67
-```
-
-Switch to the root user.
-
-```bash
-sudo su -
-```
-
----
-
-## Step 2: Move the Key File (If Required)
-
-If the key file is not available on the Bastion Host, copy it.
-
-```bash
-scp -i key.pem key.pem ec2-user@<PUBLIC-IP>:/home/ec2-user/
-```
-
-Login again and change permission.
-
-```bash
-chmod 400 key.pem
-```
-
----
-
-## Step 3: Connect to the Backend (Private EC2)
-
-Use the private IP address.
-
-```bash
-ssh -i key.pem ec2-user@<PRIVATE-IP>
-```
-
-Example:
-
-```bash
-ssh -i key.pem ec2-user@10.0.1.25
-```
-
-Switch to the root user.
-
-```bash
-sudo su -
-```
-
----
-
-## Step 4: Verify the Connection
-
-```bash
-hostname
-```
-
-or
-
-```bash
-ip addr
-```
-
-You should now be inside the Backend (Private EC2).
-
----
-
-# Complete Connection Flow
-
-```text
-Developer Laptop
-        │
-        ▼
-ssh -i key.pem ec2-user@54.xxx.xxx.xxx
-        │
-        ▼
-Frontend EC2 (Public / Bastion Host)
-        │
-        ▼
-ssh -i key.pem ec2-user@10.0.1.25
-        │
-        ▼
-Backend EC2 (Private)
-```
-
----
-
-# Real DevOps Example
-
-```text
-Developer
-      │
-      ▼
-Frontend EC2 (Public)
-      │
-      ├── React Application
-      │
-      ▼
-Backend EC2 (Private)
-      │
-      ├── Node.js API
-      ├── Express
-      └── MySQL / RDS
-```
-
-The frontend communicates with the backend using the backend's **private IP** because both EC2 instances are in the same VPC.
-
----
-
-# Useful Commands
-
-### Connect to Frontend EC2
-
-```bash
-ssh -i key.pem ec2-user@<PUBLIC-IP>
-```
-
-### Connect to Backend EC2
-
-```bash
-ssh -i key.pem ec2-user@<PRIVATE-IP>
-```
-
-### Switch to Root
-
-```bash
-sudo su -
-```
-
-### Change Key Permission
-
-```bash
-chmod 400 key.pem
-```
-
-### Exit Current Server
-
-```bash
-exit
-```
