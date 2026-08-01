@@ -173,3 +173,172 @@ exit
 **Ajay Patel**
 
 **DevOps | AWS | Docker | Jenkins | Terraform | Git | Linux**
+
+
+
+# Scenario 4: Frontend EC2 + Backend EC2 (Private) using Bastion Host
+
+### Architecture
+
+```text
+                Internet
+                    │
+                    ▼
+        Public EC2 (Frontend / Bastion Host)
+              Public IP: 54.xxx.xxx.xxx
+                    │
+                    │ SSH
+                    ▼
+          Private EC2 (Backend)
+            Private IP: 10.0.1.25
+```
+
+---
+
+## Step 1: Connect to the Bastion Host (Public EC2)
+
+```bash
+ssh -i key.pem ec2-user@<PUBLIC-IP>
+```
+
+Example:
+
+```bash
+ssh -i key.pem ec2-user@54.123.45.67
+```
+
+Switch to the root user.
+
+```bash
+sudo su -
+```
+
+---
+
+## Step 2: Move the Key File (If Required)
+
+If the key file is not available on the Bastion Host, copy it.
+
+```bash
+scp -i key.pem key.pem ec2-user@<PUBLIC-IP>:/home/ec2-user/
+```
+
+Login again and change permission.
+
+```bash
+chmod 400 key.pem
+```
+
+---
+
+## Step 3: Connect to the Backend (Private EC2)
+
+Use the private IP address.
+
+```bash
+ssh -i key.pem ec2-user@<PRIVATE-IP>
+```
+
+Example:
+
+```bash
+ssh -i key.pem ec2-user@10.0.1.25
+```
+
+Switch to the root user.
+
+```bash
+sudo su -
+```
+
+---
+
+## Step 4: Verify the Connection
+
+```bash
+hostname
+```
+
+or
+
+```bash
+ip addr
+```
+
+You should now be inside the Backend (Private EC2).
+
+---
+
+# Complete Connection Flow
+
+```text
+Developer Laptop
+        │
+        ▼
+ssh -i key.pem ec2-user@54.xxx.xxx.xxx
+        │
+        ▼
+Frontend EC2 (Public / Bastion Host)
+        │
+        ▼
+ssh -i key.pem ec2-user@10.0.1.25
+        │
+        ▼
+Backend EC2 (Private)
+```
+
+---
+
+# Real DevOps Example
+
+```text
+Developer
+      │
+      ▼
+Frontend EC2 (Public)
+      │
+      ├── React Application
+      │
+      ▼
+Backend EC2 (Private)
+      │
+      ├── Node.js API
+      ├── Express
+      └── MySQL / RDS
+```
+
+The frontend communicates with the backend using the backend's **private IP** because both EC2 instances are in the same VPC.
+
+---
+
+# Useful Commands
+
+### Connect to Frontend EC2
+
+```bash
+ssh -i key.pem ec2-user@<PUBLIC-IP>
+```
+
+### Connect to Backend EC2
+
+```bash
+ssh -i key.pem ec2-user@<PRIVATE-IP>
+```
+
+### Switch to Root
+
+```bash
+sudo su -
+```
+
+### Change Key Permission
+
+```bash
+chmod 400 key.pem
+```
+
+### Exit Current Server
+
+```bash
+exit
+```
